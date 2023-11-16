@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Werbebanner mit Countdown und Steuerung</title>
+  <style>
+    /* Grundlegendes Reset für Margin und Padding */
+    body, html {
+      background-color: rgba(0,0,0,0.4);
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      font-family: Arial, sans-serif;
+    }
+      
+    /* Container für den Banner mit dem Countdown */
+      .banner {
+        position: fixed; /* Fixiert den Banner oben auf dem Bildschirm */
+        bottom: 0;
+        left: 0;
+        width: 100%; /* Banner nimmt die volle Breite ein */
+        display: flex;
+        justify-content: space-between; /* Inhalte werden nebeneinander angeordnet */
+        align-items: center; /* Vertikales Zentrieren der Inhalte */
+        padding: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5); /* Schatten für den Banner */
+        background: #333; /* Dunkler Hintergrund des Banners */
+        color: #fff; /* Weiße Textfarbe */
+        z-index: 100; /* Stellt sicher, dass der Banner über den Bildern liegt */
+      }
+      
+      /* Stil für das Marquee (Laufband) */
+      .marquee {
+        flex-grow: 1; /* Ermöglicht dem Marquee, den verfügbaren Platz einzunehmen */
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      
+      /* Animation für den laufenden Text */
+      .laufender-text {
+        display: inline-block;
+        padding-left: 100%; /* Startet den Text außerhalb des Bildschirms */
+        animation: marquee 10s linear infinite;
+      }
+      
+      /* Keyframes für die Animation des laufenden Texts */
+      @keyframes marquee {
+        from { transform: translateX(0); }
+        to { transform: translateX(-100%); }
+      }
+      
+      /* Countdown-Container Stil */
+      .countdown-container {
+        padding: 10px;
+        background: #444; /* Etwas dunklerer Hintergrund für den Countdown */
+      }
+      
+      /* Stil für den Startknopf */
+      #startButton {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background: #222; /* Dunkler Hintergrund für den Knopf */
+        color: #fff; /* Weiße Textfarbe für den Knopf */
+        border: none; /* Entfernt den Standardrahmen */
+        outline: none; /* Entfernt den Fokus-Rahmen */
+      }
+      
+      /* Stil für den Bildcontainer, der das 16:9-Verhältnis beibehält */
+  .image-container {
+    position: fixed;
+    top: 0px; /* oder die Höhe Ihres Banners */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Aktualisierter Stil für die Bilder */
+  .fullscreen-image {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain; /* Behält das Seitenverhältnis bei, ohne zu beschneiden */
+  }
+
+      
+      /* Stil für das Formular-Container */
+      #formContainer {
+        text-align: center;
+        margin-bottom: 20px;
+        position: fixed; /* Fixiert den Formular-Container */
+        width: 100%; /* Formular-Container nimmt die volle Breite ein */
+        top: 50%; /* Zentriert das Formular vertikal */
+        transform: translateY(-50%); /* Korrigiert das Zentrum durch Verschiebung um die halbe Höhe */
+        z-index: 10;
+      }
+      
+    /* Stil für das Formular und dessen Elemente */
+    #bannerForm label {
+      margin-right: 10px;
+    }
+      
+    #bannerForm input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="formContainer">
+    <!-- Formular für die Eingabe von Banner-Text und Video-Dauer -->
+    <form id="bannerForm">
+      <label for="text">Banner-Text:</label>
+      <input type="text" id="text" name="text" required>
+      
+      <label for="duration">Video-Länge (in Sekunden):</label>
+      <input type="number" id="duration" name="duration" required>
+      
+      <button type="submit" id="startButton">Banner aktualisieren und Countdown starten</button>
+    </form>
+  </div>
+  
+  <!-- Container für den Banner -->
+  <div class="banner" id="banner">
+    <div class="marquee">
+      <p class="laufender-text" id="bannerText">Willkommen zu unserem Event!</p>
+    </div>
+    <div class="countdown-container">
+      <p id="countdown">00:00:10</p>
+    </div>
+  </div>
+  
+  <!-- Hintergrundbilder, initial versteckt -->
+  <div class="image-container">
+    <img src="/assets/HD-wallpaper-planet-zoo.jpg" id="backgroundImage1" class="fullscreen-image">
+    <img src="/assets/PZ_Africa_Pack_Key_Art_(middled)_1920x1080.jpg" id="backgroundImage2" class="fullscreen-image" style="display: none;">
+    <!-- Drittes Bild, das nach dem Countdown angezeigt wird -->
+    <img src="/assets/final-image.svg" id="finalImage" class="fullscreen-image" style="display: none;">
+  </div>
+  
+  <script>
+  document.getElementById('bannerForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Verhindert das Neuladen der Seite
+    
+    var bannerText = document.getElementById('text').value;
+    var videoDuration = parseInt(document.getElementById('duration').value, 10);
+    document.getElementById('bannerText').textContent = bannerText;
+    startCountdown(videoDuration);
+    document.getElementById('formContainer').style.display = 'none';
+  });
+  
+  function startCountdown(duration) {
+    var countdownElement = document.getElementById('countdown');
+    var backgroundImage1 = document.getElementById('backgroundImage1');
+    var backgroundImage2 = document.getElementById('backgroundImage2');
+    var finalImage = document.getElementById('finalImage'); // Das neue Bild
+    backgroundImage1.style.display = 'block';
+    var timeLeft = duration;
+  
+    var countdownFunction = setInterval(function() {
+      var minutes = Math.floor(timeLeft / 60);
+      var seconds = timeLeft % 60;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      seconds = seconds < 10 ? '0' + seconds : seconds;
+      countdownElement.textContent = `00:${minutes}:${seconds}`;
+  
+      if (timeLeft === 10) {
+        backgroundImage1.style.display = 'none';
+        backgroundImage2.style.display = 'block';
+      }
+      
+      if (timeLeft === 0) {
+        clearInterval(countdownFunction);
+        countdownElement.textContent = "00:00:00";
+        backgroundImage2.style.display = 'none';
+        finalImage.style.display = 'block'; // Zeigt das dritte Bild an
+      }
+      
+      timeLeft--;
+    }, 1000);
+  }
+  </script>
+  </body>
+  </html>
